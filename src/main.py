@@ -1,55 +1,19 @@
-import openai
-import os
+import time
+import sensor
+import summarize
+import re
 
-from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain.chains import RetrievalQA
-from langchain_openai import ChatOpenAI
+def extract_last_number(s):
+    # 正規表現で文字列の最後にある数字を探す
+    match = re.search(r'\d+$', s)
+    if match:
+        return int(match.group())  # 見つかった場合は整数として返す
+    return None  # 見つからなかった場合はNoneを返す
 
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+while True:
+  response = sensor.send_command("r A0")
+  if response.startswith("Analog pin A0 is") and extract_last_number(response) > 100:
+      summarize.summarize()
+      time.sleep(10)
 
-embedding_model = "text-embedding-3-small"
-model = "gpt-4o-mini"
-
-book_path = "./data/book.txt"
-
-def extract_book(path: str):
-    with open(path, "r") as file:
-        return file.read()
-
-def main():
-    # テキストの読み込み
-    book_text = extract_book(book_path)
-
-    # チャンクの設定
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1500,
-        chunk_overlap=200
-    )
-
-    # RAG用のドキュメントを作成
-    documents = text_splitter.create_documents([book_text])
-
-    # 埋め込みの作成
-    embeddings = OpenAIEmbeddings(model=embedding_model)
-    vectorstore = Chroma.from_documents(documents, embedding=embeddings)
-
-    # 検索の設定
-    qa = RetrievalQA.from_chain_type(
-        llm=ChatOpenAI(model_name=model, temperature=0),
-        chain_type="stuff",
-        retriever=vectorstore.as_retriever(search_kwargs={"k": 5}),
-        return_source_documents=False
-    )
-
-    query = "与えられた本の内容を要約してください。"
-    output = qa.invoke(query)
-
-    print("Summary of the Book:")
-    print(output["result"])
-
-if __name__ == "__main__":
-    main()
+  time.sleep(1)
