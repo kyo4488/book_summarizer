@@ -12,6 +12,7 @@ def extract_last_number(s):
 
 while True:
   response = sensor.send_command("r A0")
+  print(response)
   if response.startswith("Analog pin A0 is") and extract_last_number(response) > 100:
       summarize.summarize()
       time.sleep(10)
