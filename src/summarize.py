@@ -20,7 +20,10 @@ def extract_book(path: str):
     with open(path, "r") as file:
         return file.read()
 
-def summarize():
+# DBの保存先
+chroma_persist_dir = "./chroma_db"
+
+def initialize_qa():
     # テキストの読み込み
     book_text = extract_book(book_path)
 
@@ -35,7 +38,14 @@ def summarize():
 
     # 埋め込みの作成
     embeddings = OpenAIEmbeddings(model=embedding_model)
-    vectorstore = Chroma.from_documents(documents, embedding=embeddings)
+    
+    # 永続化されたベクトルストアを使用
+    vectorstore = Chroma.from_documents(
+        documents, 
+        embedding=embeddings,
+        persist_directory=chroma_persist_dir
+    )
+    vectorstore.persist()
 
     # 検索の設定
     qa = RetrievalQA.from_chain_type(
@@ -44,12 +54,17 @@ def summarize():
         retriever=vectorstore.as_retriever(search_kwargs={"k": 5}),
         return_source_documents=False
     )
+    return qa
+
+def summarize():
+    qa = initialize_qa()
 
     query = "与えられた本の内容を要約してください。"
     output = qa.invoke(query)
 
     print("Summary of the Book:")
     print(output["result"])
+    return output
 
 if __name__ == "__main__":
     summarize()
