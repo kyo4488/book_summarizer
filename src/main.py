@@ -1,5 +1,9 @@
+DEBUG = True
+LENGTH_LIMIT = True
+
 import time
-import sensor
+if not DEBUG:
+  import sensor
 import summarize
 import re
 
@@ -10,11 +14,22 @@ def extract_last_number(s):
         return int(match.group())  # 見つかった場合は整数として返す
     return None  # 見つからなかった場合はNoneを返す
 
-while True:
-  response = sensor.send_command("r A0")
-  print(response)
-  if response.startswith("Analog pin A0 is") and extract_last_number(response) > 100:
-      summarize.summarize()
-      time.sleep(10)
+push_count=0
 
-  time.sleep(1)
+while True:
+  if DEBUG:
+     response = input()
+  else:
+    response = sensor.send_command("r A0")
+  
+  if response.startswith("Analog pin A0 is") and extract_last_number(response) > 100:
+    push_count += 1
+  elif push_count > 0:
+    if LENGTH_LIMIT:
+      summarize.summarize(push_count)
+    else:
+      summarize.summarize()
+    count = 0
+      
+
+  time.sleep(0.2)
