@@ -3,3 +3,4 @@ data
 DS_Store
 src/__pycache__
 chroma_db
+.DS_Store

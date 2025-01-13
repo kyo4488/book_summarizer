@@ -11,8 +11,8 @@ from langchain_openai import ChatOpenAI
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-embedding_model = "text-embedding-3-small"
-model = "gpt-4o-mini"
+embedding_model = "text-embedding-3-large"
+model = "gpt-4o"
 
 book_path = "./data/book.txt"
 
@@ -22,48 +22,42 @@ def extract_book(path: str):
         return file.read()
 
 
-# DBの保存先
-chroma_persist_dir = "./chroma_db"
-
-
-def initialize_qa():
+def summarize(push_count=5):
     # テキストの読み込み
     book_text = extract_book(book_path)
-
     # チャンクの設定
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1500,
+        chunk_overlap=200
+    )
 
     # RAG用のドキュメントを作成
     documents = text_splitter.create_documents([book_text])
 
     # 埋め込みの作成
     embeddings = OpenAIEmbeddings(model=embedding_model)
-
-    # 永続化されたベクトルストアを使用
-    vectorstore = Chroma.from_documents(
-        documents, embedding=embeddings, persist_directory=chroma_persist_dir
-    )
-    vectorstore.persist()
+    vectorstore = Chroma.from_documents(documents, embedding=embeddings)
 
     # 検索の設定
     qa = RetrievalQA.from_chain_type(
         llm=ChatOpenAI(model_name=model, temperature=0),
         chain_type="stuff",
         retriever=vectorstore.as_retriever(search_kwargs={"k": 5}),
-        return_source_documents=False,
+        return_source_documents=False
     )
-    return qa
 
-
-def summarize():
-    qa = initialize_qa()
-
-    query = "与えられた本の内容を要約してください。"
+    if push_count <= 2:
+        query = "与えられた本の内容を短めに要約してください。"
+    elif push_count<= 4:
+        query = "与えられた本の内容を要約してください。"
+    else:
+        query = "与えられた本の内容を長めに要約してください。"
+        
+    print(query)
     output = qa.invoke(query)
 
     print("Summary of the Book:")
     print(output["result"])
-    return output
 
 
 # webからのテスト用
@@ -93,6 +87,8 @@ def summarize_from_web(book_text):
     )
 
     query = "与えられた本の内容を要約してください。"
+
+    print(query)
     output = qa.invoke(query)
 
     print("Summary of the Book:")
@@ -101,4 +97,4 @@ def summarize_from_web(book_text):
 
 
 if __name__ == "__main__":
-    summarize()
+    summarize(6)
