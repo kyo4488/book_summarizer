@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Summarizer</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">Book Summarizer</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <!-- 選択中の作品表示 -->
+                {% if selected_work.title %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">選択中の作品</h2>
+                        <p class="card-text"><strong>作品名:</strong> {{ selected_work.title }}</p>
+                        <p class="card-text"><strong>著者:</strong> {{ selected_work.author }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 要約機能 -->
+                <div class="mb-4">
+                    <form method="POST" class="d-grid gap-2" id="summary-form">
+                        <button type="submit" name="summary" class="btn btn-primary btn-lg">
+                            <i class="bi bi-journal-text"></i> 要約を生成
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- 要約結果またはローディングアニメーション -->
+                <div id="summary-container" class="card mb-4">
+                    <div class="card-body" id="summary-content">
+                        <h2 class="card-title">要約結果</h2>
+                        <!-- ローディングアニメーション -->
+                        <div id="loading" class="text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>要約を生成中...</p>
+                        </div>
+
+                        <!-- 要約結果 -->
+                        {% if summary %}
+                        <div id="summary-result">
+                            <p class="card-text">{{ summary }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <script>
+                    // 要約ボタンが押されたらローディングアニメーションを表示
+                    document.getElementById("summary-form").addEventListener("submit", function () {
+                        // 要約結果を非表示
+                        const summaryResult = document.getElementById("summary-result");
+                        if (summaryResult) {
+                            summaryResult.style.display = "none";
+                        }
+                
+                        // ローディングを表示
+                        document.getElementById("loading").style.display = "block";
+                    });
+                </script>
+            </div>
+            <!-- Right Column -->
+            <div class="col-md-6">
+                <!-- 検索機能 -->
+                <div class="mb-4">
+                    <form method="POST" class="d-grid gap-2">
+                        <div class="input-group">
+                            <input type="text" name="search_query" class="form-control form-control-lg" placeholder="作品名を検索">
+                            <button type="submit" name="search" class="btn btn-primary btn-lg">
+                                <i class="bi bi-search"></i> 検索
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {% if search_results is not none %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title mb-3">検索結果</h2>
+                        <form method="POST" id="work-selection-form">
+                            <ul class="list-group mb-3">
+                                {% for _, row in search_results.iterrows() %}
+                                <li class="list-group-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="selected_work_title" value="{{ row['作品名'] }}" id="work-{{ loop.index }}" onchange="this.form.submit()">
+                                        <label class="form-check-label" for="work-{{ loop.index }}">
+                                            {{ row['作品名'] }} - {{ row['姓名'] }}
+                                        </label>
+                                        <input type="hidden" name="selected_work_author" value="{{ row['姓名'] }}">
+                                        <input type="hidden" name="selected_work_url" value="{{ row['XHTML/HTMLファイルURL'] }}">
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </form>
+                        <script>
+                            document.getElementById('work-selection-form').addEventListener('submit', function(e) {
+                                e.preventDefault();
+                                fetch(this.action, {
+                                    method: 'POST',
+                                    body: new FormData(this)
+                                }).then(response => {
+                                    if (response.ok) {
+                                        window.location.reload();
+                                    }
+                                });
+                            });
+                        </script>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+</body>
+</html>
