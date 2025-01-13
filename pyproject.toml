@@ -16,6 +16,11 @@ langchain-community = "^0.3.14"
 chromadb = "^0.6.1"
 langchain-openai = "^0.2.14"
 flask = "^3.1.0"
+beautifulsoup4 = "^4.12.3"
+requests = "^2.32.3"
+pandas = "^2.2.3"
+faiss-cpu = "^1.9.0.post1"
+black = "^24.10.0"
 
 
 [build-system]
