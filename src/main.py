@@ -4,8 +4,10 @@ LENGTH_LIMIT = True
 import time
 if not DEBUG:
   import sensor
-import summarize
 import re
+import json
+
+push_count = 0
 
 def extract_last_number(s):
     # 正規表現で文字列の最後にある数字を探す
@@ -14,7 +16,18 @@ def extract_last_number(s):
         return int(match.group())  # 見つかった場合は整数として返す
     return None  # 見つからなかった場合はNoneを返す
 
-push_count=0
+# push__countの読み書き
+def update_push_count(new_value):
+    with open("push_count.json", "w") as f:
+        json.dump({"push_count": new_value}, f)
+
+def get_push_count():
+    try:
+        with open("push_count.json", "r") as f:
+            data = json.load(f)
+            return data["push_count"]
+    except (FileNotFoundError, json.JSONDecodeError):
+        return 0
 
 while True:
   if DEBUG:
@@ -23,13 +36,13 @@ while True:
     response = sensor.send_command("r A0")
   
   if response.startswith("Analog pin A0 is") and extract_last_number(response) > 100:
+    print("plus")
     push_count += 1
-  elif push_count > 0:
-    if LENGTH_LIMIT:
-      summarize.summarize(push_count)
-    else:
-      summarize.summarize()
-    count = 0
-      
+    update_push_count(push_count)
+  elif push_count > 7:
+      push_count = 0
+  
+  update_push_count(push_count)
+  print("push_count:", push_count)
 
   time.sleep(0.2)
