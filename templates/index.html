@@ -17,6 +17,7 @@
     </nav>
 
     <div class="container">
+        <p>push count: {{ push_count }}</p>
         <div class="row">
             <!-- Left Column -->
             <div class="col-md-6">
@@ -111,14 +112,19 @@
                         </form>
                         <script>
                             document.getElementById('work-selection-form').addEventListener('submit', function(e) {
-                                e.preventDefault();
+                                e.preventDefault();  // デフォルトのフォーム送信を防ぐ
                                 fetch(this.action, {
                                     method: 'POST',
                                     body: new FormData(this)
                                 }).then(response => {
                                     if (response.ok) {
-                                        window.location.reload();
+                                        console.log("Form submitted successfully.");
+                                        window.location.href = '/';  // ページをリロード
+                                    } else {
+                                        console.error("Failed to submit form. Status:", response.status);
                                     }
+                                }).catch(error => {
+                                    console.error("Error occurred during fetch:", error);
                                 });
                             });
                         </script>
