@@ -2,7 +2,7 @@ import serial
 import time
 
 # Arduinoのシリアルポートとボーレートを設定
-arduino_port = "/dev/cu.usbmodem101"  # 使用しているポートを指定
+arduino_port = "/dev/cu.usbmodem1101"  # 使用しているポートを指定
 baud_rate = 9600       # Arduinoスケッチと一致するボーレート
 
 # シリアル通信を初期化

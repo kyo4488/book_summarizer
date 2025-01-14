@@ -60,11 +60,15 @@ def summarize(book_text):
     print("push_count:", push_count)
 
     if push_count <= 2:
+        query = "与えられた本の内容を非常に短めに要約してください"
+    elif push_count <= 5:
         query = "与えられた本の内容を短めに要約してください。"
-    elif push_count<= 4:
+    elif push_count<= 10:
         query = "与えられた本の内容を要約してください。"
-    else:
+    elif push_count <= 15:
         query = "与えられた本の内容を長めに要約してください。"
+    else:
+        query = "与えられた本の内容を非常に長めに要約してください。"
         
     print(query)
     output = qa.invoke(query)

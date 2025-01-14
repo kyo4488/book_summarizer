@@ -6,6 +6,7 @@ from scraper import scrape_book_content
 
 from summarize import summarize
 
+
 app = Flask(__name__, template_folder="../templates")
 app.secret_key = "test_secret_key"
 data = load_data()
@@ -21,6 +22,7 @@ def get_push_count():
             return data["push_count"]
     except (FileNotFoundError, json.JSONDecodeError):
         return 0
+    
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -47,7 +49,8 @@ def index():
         # 要約機能
         if "summary" in request.form:
             text = scrape_book_content(selected_work["url"])
-            print("text:", text[:100])
+            if text:
+                print("text:", text[:100])
             try:
                 summary = summarize(text)
                 session["summary"] = summary

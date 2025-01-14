@@ -1,4 +1,4 @@
-DEBUG = True
+DEBUG = False
 LENGTH_LIMIT = True
 
 import time
@@ -29,6 +29,9 @@ def get_push_count():
     except (FileNotFoundError, json.JSONDecodeError):
         return 0
 
+#一定時間押されなかったら0に戻す
+no_push_count=0
+
 while True:
   if DEBUG:
      response = input()
@@ -39,8 +42,13 @@ while True:
     print("plus")
     push_count += 1
     update_push_count(push_count)
-  elif push_count > 7:
-      push_count = 0
+    no_push_count=0
+  else:
+    no_push_count+=1
+    if no_push_count>50:
+      push_count=0
+      update_push_count(push_count)
+      no_push_count=0
   
   update_push_count(push_count)
   print("push_count:", push_count)
